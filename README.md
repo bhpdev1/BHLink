@@ -39,7 +39,7 @@ Le serveur implémente le protocole HTTP Range : il répond `206 Partial Content
 
 Les fichiers sont lus et envoyés en flux, avec gestion de la contre-pression : un pack de 30 Go ne passe jamais par la mémoire du serveur. La consommation de RAM reste la même que l'on serve un fichier de 50 Mo ou de 50 Go.
 
-Le quota d'un lien est décompté au volume réel d'octets transmis (`pendingBytes`) plutôt qu'au simple statut de clôture : chaque octet envoyé est cumulé par lien jusqu'à atteindre la taille du fichier, empêchant le contournement par interruption volontaire avant le dernier octet. Chaque téléchargeur dispose de son propre créneau via un cookie dédié (`bhl_dl`), évitant tout blocage mutuel entre utilisateurs partageant une même adresse IP (VPN/NAT). Les reprises (`Range`), le multi-connexions et les coupures accidentelles sont réconciliés et comptent pour un seul usage.
+Le quota d'un lien est décompté au volume réel d'octets transmis (`pendingBytes`) plutôt qu'au simple statut de clôture : chaque octet envoyé est cumulé par lien jusqu'à atteindre la taille du fichier, empêchant le contournement par interruption volontaire avant le dernier octet (avec expiration automatique des reliquats inactifs après 48 h). Chaque téléchargeur dispose de son propre créneau via un cookie dédié (`bhl_dl`), évitant tout blocage mutuel entre utilisateurs partageant une même adresse IP (VPN/NAT). Les reprises (`Range`), le multi-connexions et les coupures accidentelles sont réconciliés et comptent pour un seul usage.
 
 ### Envoi des gros fichiers
 
@@ -47,7 +47,7 @@ Côté administration, un pack est découpé dans le navigateur en morceaux de 1
 
 ### Liens et accès
 
-Chaque lien a une durée de validité, un nombre maximum d'utilisations et, en option, un mot de passe. Un lien peut être révoqué à tout moment : plus aucune nouvelle requête n'est acceptée sur ce lien (un téléchargement déjà démarré va jusqu'à son terme). Les liens inconnus, expirés ou révoqués affichent le même message générique, pour ne rien révéler sur leur état réel ; seul un lien épuisé le signale explicitement.
+Chaque lien a une durée de validité, un nombre maximum d'utilisations et, en option, un mot de passe. La session du visiteur gère le déverrouillage de multiples liens protégés en parallèle (multi-onglets) sans perte d'autorisation. Un lien peut être révoqué à tout moment : plus aucune nouvelle requête n'est acceptée sur ce lien (un téléchargement déjà démarré va jusqu'à son terme). Les liens inconnus, expirés ou révoqués affichent le même message générique, pour ne rien révéler sur leur état réel ; seul un lien épuisé le signale explicitement.
 
 ### Sécurité
 
@@ -81,7 +81,7 @@ Quelques outils accompagnent l'application pour qu'elle reste simple à faire to
 - **Mises à jour sûres** : le script de déploiement attend un moment calme (aucun envoi ni requête en cours), n'interrompt donc pas un transfert, sauvegarde la version en place, puis vérifie l'état de santé du service après redémarrage. En cas d'échec, il revient automatiquement à la version précédente.
 - **Outil de supervision** : une petite application de bureau, locale, qui affiche l'état des services, la validité du certificat, l'espace disque et l'état des sauvegardes, avec des actions rapides (redémarrage, sauvegarde immédiate). Elle n'ouvre aucun port réseau.
 
-Les tests couvrent le cycle de vie complet des liens (quotas, expiration, mots de passe, révocation), la reprise des téléchargements et des envois après coupure, la concurrence simultanée et la persistance des sessions après redémarrage.
+Les tests automatisés (47 tests fonctionnels de bout en bout et 39 tests de reprise validés en conditions réelles sur VPS) couvrent le cycle de vie complet des liens (quotas, expiration, mots de passe, révocation, multi-onglets), la reprise des téléchargements et des envois après coupure, la concurrence simultanée et la persistance des sessions après redémarrage.
 
 ---
 
