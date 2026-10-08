@@ -47,7 +47,7 @@ On the admin side, a pack is split in the browser into 16 MB chunks sent one aft
 
 ### Links and access
 
-Each link has a lifetime, a maximum number of uses and, optionally, a password. A link can be revoked at any time: access is cut immediately, including for downloads already in progress. Expired, exhausted and revoked links all show the same generic error page, so nothing is revealed about the real state of a link.
+Each link has a lifetime, a maximum number of uses and, optionally, a password. A link can be revoked at any time: no new request is accepted on that link (a download already started runs to completion). Unknown, expired and revoked links all show the same generic message, so nothing is revealed about their real state; only an exhausted link is reported explicitly.
 
 ### Security
 
@@ -78,7 +78,7 @@ The application is a Fastify server written in TypeScript, behind a Caddy revers
 A few tools come with the application to keep it simple to run:
 
 - **Encrypted backups**: a daily backup of the database, configuration and cover images, encrypted with AES-256-GCM, with automatic rotation, integrity checks and a tested restore procedure.
-- **Zero-downtime updates**: the deployment script waits until no upload or download is in progress, backs up the running version, then checks the service health after restart. On failure, it rolls back to the previous version automatically.
+- **Safe updates**: the deployment script waits for a quiet moment (no upload or request in progress), so it never interrupts a transfer, backs up the running version, then checks the service health after restart. On failure, it rolls back to the previous version automatically.
 - **Supervision tool**: a small local desktop application showing service status, certificate validity, disk space and backup status, with quick actions (restart, immediate backup). It opens no network port.
 
 Tests cover the full link lifecycle (quotas, expiration, passwords, revocation), download and upload resume after interruption, and session persistence after restart.

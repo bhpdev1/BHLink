@@ -47,7 +47,7 @@ Côté administration, un pack est découpé dans le navigateur en morceaux de 1
 
 ### Liens et accès
 
-Chaque lien a une durée de validité, un nombre maximum d'utilisations et, en option, un mot de passe. Un lien peut être révoqué à tout moment : l'accès est coupé immédiatement, y compris pour les téléchargements en cours. Les liens expirés, épuisés ou révoqués affichent la même page d'erreur générique, pour ne rien révéler sur l'état réel du lien.
+Chaque lien a une durée de validité, un nombre maximum d'utilisations et, en option, un mot de passe. Un lien peut être révoqué à tout moment : plus aucune nouvelle requête n'est acceptée sur ce lien (un téléchargement déjà démarré va jusqu'à son terme). Les liens inconnus, expirés ou révoqués affichent le même message générique, pour ne rien révéler sur leur état réel ; seul un lien épuisé le signale explicitement.
 
 ### Sécurité
 
@@ -78,7 +78,7 @@ L'application est un serveur Fastify en TypeScript, derrière un reverse proxy C
 Quelques outils accompagnent l'application pour qu'elle reste simple à faire tourner :
 
 - **Sauvegardes chiffrées** : une sauvegarde quotidienne de la base, de la configuration et des couvertures, chiffrée en AES-256-GCM, avec rotation automatique, vérification d'intégrité et procédure de restauration testée.
-- **Mises à jour sans coupure** : le script de déploiement attend qu'aucun envoi ni téléchargement ne soit en cours, sauvegarde la version en place, puis vérifie l'état de santé du service après redémarrage. En cas d'échec, il revient automatiquement à la version précédente.
+- **Mises à jour sûres** : le script de déploiement attend un moment calme (aucun envoi ni requête en cours), n'interrompt donc pas un transfert, sauvegarde la version en place, puis vérifie l'état de santé du service après redémarrage. En cas d'échec, il revient automatiquement à la version précédente.
 - **Outil de supervision** : une petite application de bureau, locale, qui affiche l'état des services, la validité du certificat, l'espace disque et l'état des sauvegardes, avec des actions rapides (redémarrage, sauvegarde immédiate). Elle n'ouvre aucun port réseau.
 
 Les tests couvrent le cycle de vie complet des liens (quotas, expiration, mots de passe, révocation), la reprise des téléchargements et des envois après coupure, et la persistance des sessions après redémarrage.
