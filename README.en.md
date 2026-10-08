@@ -39,7 +39,7 @@ The server implements HTTP Range: it answers `206 Partial Content` to partial re
 
 Files are read and sent as a stream with backpressure handling, so a 30 GB pack never goes through server memory. RAM usage is the same whether a 50 MB or a 50 GB file is being served.
 
-A link's quota is only consumed once the file has been fully delivered. Opening the page, entering a wrong password or interrupting a download costs nothing. Resumes and parallel connections belonging to the same download count as a single use.
+Link quotas are accounted for based on actual cumulative bytes transmitted (`pendingBytes`) rather than simple connection completion: every byte served is accumulated per link until reaching the pack size, preventing circumvention by aborting right before the final byte. Each downloader is granted their own slot via a dedicated cookie (`bhl_dl`), avoiding mutual lockouts between users sharing a single public IP (VPN/NAT). Resume requests (`Range`), multi-connection segments, and accidental disconnections are reconciled as a single download.
 
 ### Large file uploads
 
@@ -81,7 +81,7 @@ A few tools come with the application to keep it simple to run:
 - **Safe updates**: the deployment script waits for a quiet moment (no upload or request in progress), so it never interrupts a transfer, backs up the running version, then checks the service health after restart. On failure, it rolls back to the previous version automatically.
 - **Supervision tool**: a small local desktop application showing service status, certificate validity, disk space and backup status, with quick actions (restart, immediate backup). It opens no network port.
 
-Tests cover the full link lifecycle (quotas, expiration, passwords, revocation), download and upload resume after interruption, and session persistence after restart.
+Tests cover the full link lifecycle (quotas, expiration, passwords, revocation), download and upload resume after interruption, concurrent race conditions, and session persistence after restart.
 
 ---
 

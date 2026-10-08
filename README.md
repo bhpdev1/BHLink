@@ -39,7 +39,7 @@ Le serveur implémente le protocole HTTP Range : il répond `206 Partial Content
 
 Les fichiers sont lus et envoyés en flux, avec gestion de la contre-pression : un pack de 30 Go ne passe jamais par la mémoire du serveur. La consommation de RAM reste la même que l'on serve un fichier de 50 Mo ou de 50 Go.
 
-Le quota d'un lien n'est décompté que lorsque le fichier a été transmis en entier. Ouvrir la page, se tromper de mot de passe ou interrompre un téléchargement ne consomme rien. Les reprises et les connexions multiples d'un même téléchargement comptent pour un seul usage.
+Le quota d'un lien est décompté au volume réel d'octets transmis (`pendingBytes`) plutôt qu'au simple statut de clôture : chaque octet envoyé est cumulé par lien jusqu'à atteindre la taille du fichier, empêchant le contournement par interruption volontaire avant le dernier octet. Chaque téléchargeur dispose de son propre créneau via un cookie dédié (`bhl_dl`), évitant tout blocage mutuel entre utilisateurs partageant une même adresse IP (VPN/NAT). Les reprises (`Range`), le multi-connexions et les coupures accidentelles sont réconciliés et comptent pour un seul usage.
 
 ### Envoi des gros fichiers
 
@@ -81,7 +81,7 @@ Quelques outils accompagnent l'application pour qu'elle reste simple à faire to
 - **Mises à jour sûres** : le script de déploiement attend un moment calme (aucun envoi ni requête en cours), n'interrompt donc pas un transfert, sauvegarde la version en place, puis vérifie l'état de santé du service après redémarrage. En cas d'échec, il revient automatiquement à la version précédente.
 - **Outil de supervision** : une petite application de bureau, locale, qui affiche l'état des services, la validité du certificat, l'espace disque et l'état des sauvegardes, avec des actions rapides (redémarrage, sauvegarde immédiate). Elle n'ouvre aucun port réseau.
 
-Les tests couvrent le cycle de vie complet des liens (quotas, expiration, mots de passe, révocation), la reprise des téléchargements et des envois après coupure, et la persistance des sessions après redémarrage.
+Les tests couvrent le cycle de vie complet des liens (quotas, expiration, mots de passe, révocation), la reprise des téléchargements et des envois après coupure, la concurrence simultanée et la persistance des sessions après redémarrage.
 
 ---
 
